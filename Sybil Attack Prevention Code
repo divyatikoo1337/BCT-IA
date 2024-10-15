@@ -1,0 +1,64 @@
+import requests
+from collections import defaultdict
+
+
+NODES = [
+    "https://cloudflare-eth.com", 
+    "https://rpc.ankr.com/eth",  
+    "https://eth-rpc.gateway.pokt.network",  
+    "https://eth-mainnet.public.blastapi.io",  
+    "https://eth.drpc.org"
+]
+
+def ping_node(node_url):
+   
+    try:
+        response = requests.get(node_url, timeout=5)
+        if response.status_code == 200:
+            print(f"✅ {node_url} is reachable.")
+            return node_url
+        else:
+            print(f"⚠️ {node_url} responded with status code {response.status_code}.")
+    except requests.exceptions.RequestException as e:
+        print(f"❌ {node_url} is unreachable. Error: {e}")
+    return None
+
+def detect_suspicious_nodes(nodes):
+    
+    ip_tracker = defaultdict(int)
+
+    
+    for node in nodes:
+        ip = node.split("//")[1].split("/")[0]  # Extracting hostname from URL
+        ip_tracker[ip] += 1
+
+    print("\nSuspicious Activity Report:")
+    for ip, count in ip_tracker.items():
+        if count > 1:
+            print(f"⚠️  Suspicious: {count} nodes from IP {ip}")
+        else:
+            print(f"✅ IP {ip} is normal.")
+
+def main():
+   
+    reachable_nodes = []
+
+    print("Starting Ethereum Node Monitoring...\n")
+
+  
+    for node in NODES:
+        reachable_node = ping_node(node)
+        if reachable_node:
+            reachable_nodes.append(reachable_node)
+
+    print("\nReachability Check Complete.")
+    print(f"Total Reachable Nodes: {len(reachable_nodes)}\n")
+
+
+    if reachable_nodes:
+        detect_suspicious_nodes(reachable_nodes)
+    else:
+        print("No reachable nodes found. Suspicious detection skipped.")
+
+if _name_ == "_main_":
+    main()
